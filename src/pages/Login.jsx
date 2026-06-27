@@ -1,37 +1,46 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08 }
-  }
+    transition: { staggerChildren: 0.08 },
+  },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 },
+  },
 };
 
 export function Login() {
   const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+
+  const [localError, setLocalError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     clearError();
 
+    if (!formData.email || !formData.password)
+      setLocalError("Entre tout les donnees.");
+
     try {
       await login(formData);
-      navigate('/nearby');
+      navigate("/nearby");
     } catch (err) {
-      console.error('Login error:', err);
+      console.error("Login error:", err);
     }
   };
 
@@ -51,16 +60,17 @@ export function Login() {
           <p className="text-gray-500">Accédez à votre compte</p>
         </motion.div>
 
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3"
-          >
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            <p className="text-red-700 text-sm">{error}</p>
-          </motion.div>
-        )}
+        {error ||
+          (localError && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3"
+            >
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <p className="text-red-700 text-sm">{error || localError}</p>
+            </motion.div>
+          ))}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <motion.div variants={itemVariants}>
@@ -72,7 +82,9 @@ export function Login() {
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                }
                 className="w-full bg-white border border-gray-200 rounded-2xl pl-12 pr-4 py-4 text-gray-800 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 placeholder="ex: jean@email.com"
               />
@@ -86,9 +98,11 @@ export function Login() {
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, password: e.target.value }))
+                }
                 className="w-full bg-white border border-gray-200 rounded-2xl pl-12 pr-12 py-4 text-gray-800 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 placeholder="••••••••"
               />
@@ -97,7 +111,11 @@ export function Login() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </motion.div>
@@ -116,15 +134,18 @@ export function Login() {
                 <span>Connexion en cours...</span>
               </div>
             ) : (
-              'Se connecter'
+              "Se connecter"
             )}
           </motion.button>
         </form>
 
         <motion.div variants={itemVariants} className="mt-8 text-center">
           <p className="text-gray-600">
-            Pas de compte?{' '}
-            <Link to="/signup" className="text-blue-600 font-semibold hover:text-blue-700">
+            Pas de compte?{" "}
+            <Link
+              to="/signup"
+              className="text-blue-600 font-semibold hover:text-blue-700"
+            >
               S'inscrire
             </Link>
           </p>
