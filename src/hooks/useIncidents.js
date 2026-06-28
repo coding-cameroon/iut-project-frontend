@@ -25,6 +25,15 @@ export function useIncident(id) {
   });
 }
 
+// ─ Query: single user incidents ────────────────────────────────────────────────────
+export function useIncidentByUserId(id) {
+  return useQuery({
+    queryKey: INCIDENT_KEYS.detail(id),
+    queryFn: () => incidentApi.getByUserId(id),
+    enabled: !!id,
+  });
+}
+
 // ── Mutation: create incident ─────────────────────────────────────────────────
 export function useCreateIncident(latitude, longitude) {
   const queryClient = useQueryClient();

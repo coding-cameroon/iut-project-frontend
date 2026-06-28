@@ -33,6 +33,8 @@ export const incidentApi = {
 
   getById: (id) => api.get(`/alerts/${id}`),
 
+  getByUserId: (id) => api.get(`/alerts/user/${id}`),
+
   create: (payload) => {
     const formData = new FormData();
 

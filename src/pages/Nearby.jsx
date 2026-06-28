@@ -184,6 +184,8 @@ export function Nearby() {
   } = useNearbyIncidents(location?.lat, location?.lng);
 
   const incidents = response?.alerts ?? [];
+  console.log(JSON.stringify(incidents, null, 2));
+
   const filtered =
     filter === "ALL"
       ? incidents

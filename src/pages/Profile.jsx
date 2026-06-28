@@ -17,10 +17,19 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useIncidentByUserId } from "../hooks/useIncidents";
 
 export function Profile() {
   const navigate = useNavigate();
   const { user, logout, loading } = useAuth();
+  const userId = user?.id;
+  const { data: userIncidents = [], isLoading: userIncidentLoading } =
+    useIncidentByUserId(userId);
+
+  console.log(user?.id);
+  const normalizedIncidents = userIncidents;
+
+  console.log(JSON.stringify(normalizedIncidents, null, 2));
 
   const [permissions, setPermissions] = useState({
     camera: "prompt",
@@ -117,10 +126,18 @@ export function Profile() {
     );
   }
 
-  const displayUser = user ?? {
-    name: "Jean Dupont",
-    email: "jean.dupont@email.com",
-  };
+  const displayUser = user
+    ? {
+        name:
+          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+          user.name ||
+          user.email,
+        email: user.email || "",
+      }
+    : {
+        name: "Jean Dupont",
+        email: "jean.dupont@email.com",
+      };
   const yearsActive =
     new Date().getFullYear() - new Date(mockStats.joinDate).getFullYear();
 
@@ -213,41 +230,56 @@ export function Profile() {
             Activité récente
           </h3>
           <div className="space-y-2">
-            {mockHistory.map((item, i) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.12 + i * 0.05 }}
-                whileHover={{ x: 2 }}
-                className="flex items-center justify-between p-4 bg-slate-900 rounded-2xl border border-slate-800"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <AlertCircle
-                      className={`w-4 h-4 ${typeColor[item.type] ?? "text-slate-400"}`}
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-white text-sm truncate">
-                      {item.title}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {new Date(item.timestamp).toLocaleDateString("fr-FR")}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={`px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ml-3 ${
-                    item.status === "resolved"
-                      ? "bg-green-500/15 text-green-400 border border-green-500/20"
-                      : "bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
-                  }`}
-                >
-                  {item.status === "resolved" ? "Résolu" : "En cours"}
-                </span>
-              </motion.div>
-            ))}
+            {/*  */}
+            {userIncidentLoading && <p>LOADING....</p>}
+
+            {!userIncidentLoading &&
+              normalizedIncidents.map((item, i) => {
+                const incidentStatus =
+                  item.status === "RESOLVED" || item.status === "resolved"
+                    ? "resolved"
+                    : "pending";
+                const incidentDate =
+                  item.createdAt || item.updatedAt || item.timestamp;
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.12 + i * 0.05 }}
+                    whileHover={{ x: 2 }}
+                    className="flex items-center justify-between p-4 bg-slate-900 rounded-2xl border border-slate-800"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <AlertCircle
+                          className={`w-4 h-4 ${typeColor[item.type] ?? "text-slate-400"}`}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-white text-sm truncate">
+                          {item.title || "Incident"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {incidentDate
+                            ? new Date(incidentDate).toLocaleDateString("fr-FR")
+                            : "Date indisponible"}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ml-3 ${
+                        incidentStatus === "resolved"
+                          ? "bg-green-500/15 text-green-400 border border-green-500/20"
+                          : "bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
+                      }`}
+                    >
+                      {incidentStatus === "resolved" ? "Résolu" : "En cours"}
+                    </span>
+                  </motion.div>
+                );
+              })}
           </div>
         </motion.div>
 
