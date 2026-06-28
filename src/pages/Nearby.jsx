@@ -97,12 +97,13 @@ function IncidentSkeleton() {
 }
 
 function IncidentCard({ incident, index }) {
+  const navigate = useNavigate(); // 2. Initialized navigate
   const cfg = incidentConfig[incident.type] ?? incidentConfig.OTHER;
   const pCfg = priorityConfig[incident.priority] ?? priorityConfig.LOW;
   const Icon = cfg.icon;
 
   return (
-    <motion.div
+    <motion.button
       layout
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -113,8 +114,10 @@ function IncidentCard({ incident, index }) {
         stiffness: 300,
         damping: 28,
       }}
-      onClick={() => navigate(`/${incident.id}`)}
-      className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden hover:border-slate-700 transition-all"
+      // 3. Fixed path to match recommended route structure: /nearby/:id
+      onClick={() => navigate(`/nearby/${incident.id}`)}
+      // 4. Fixed class: removed hover:pointer, added text-left, block, and w-full
+      className="bg-slate-900 w-full text-left rounded-2xl border border-slate-800 overflow-hidden hover:border-slate-700 transition-all cursor-pointer"
       style={{ borderLeftWidth: 3, borderLeftColor: cfg.accent }}
     >
       <div className="p-4">
@@ -163,7 +166,7 @@ function IncidentCard({ incident, index }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.button>
   );
 }
 

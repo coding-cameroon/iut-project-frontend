@@ -63,7 +63,7 @@ export function App() {
           >
             <Route index element={<Alert />} />
             <Route path="nearby" element={<Nearby />} />
-            <Route path=":id" element={<IncidentDetail />} />
+            <Route path="nearby/:id" element={<IncidentDetail />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
