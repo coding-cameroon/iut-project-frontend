@@ -1,6 +1,8 @@
 import axios from "axios";
 
-export const API_BASE_URL = "https://iut-project-backend.onrender.com/api";
+export const API_BASE_URL =
+  "https://iut-project-backend-production.up.railway.app/api";
+//https://iut-project-backend.onrender.com/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -16,6 +18,8 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // console.log(JSON.stringify(config, null, 2));
     return config;
   },
   (error) => Promise.reject(error),
@@ -23,7 +27,7 @@ api.interceptors.request.use(
 
 // Response interceptor — normalize errors + handle 401
 api.interceptors.response.use(
-  (response) => response.data, // unwrap .data automatically
+  (response) => response.data,
   (error) => {
     const message =
       error.response?.data?.message ||
@@ -36,6 +40,8 @@ api.interceptors.response.use(
       localStorage.removeItem("token");
       window.location.href = "/login";
     }
+
+    console.log(JSON.stringify(error, null, 2));
 
     // Attach a clean message to the error before re-throwing
     error.message = message;

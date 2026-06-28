@@ -39,7 +39,7 @@ const priorityConfig = {
     label: "Faible",
     dot: "#22c55e",
     text: "text-green-700",
-    ring: "border-green-200  bg-green-50",
+    ring: "border-green-200 bg-green-50",
   },
   MEDIUM: {
     label: "Moyenne",
@@ -51,13 +51,13 @@ const priorityConfig = {
     label: "Élevée",
     dot: "#ef4444",
     text: "text-red-700",
-    ring: "border-red-200    bg-red-50",
+    ring: "border-red-200 bg-red-50",
   },
   CRITICAL: {
     label: "Critique",
     dot: "#dc2626",
     text: "text-red-900",
-    ring: "border-red-300    bg-red-100",
+    ring: "border-red-300 bg-red-100",
   },
 };
 
@@ -90,11 +90,6 @@ function IncidentSkeleton() {
             <div className="h-5 bg-slate-800 rounded-full w-16" />
           </div>
           <div className="h-3 bg-slate-800 rounded w-3/4" />
-          <div className="h-3 bg-slate-800 rounded w-1/2" />
-          <div className="flex gap-3 mt-2">
-            <div className="h-3 bg-slate-800 rounded w-12" />
-            <div className="h-3 bg-slate-800 rounded w-16" />
-          </div>
         </div>
       </div>
     </div>
@@ -118,25 +113,24 @@ function IncidentCard({ incident, index }) {
         stiffness: 300,
         damping: 28,
       }}
-      whileHover={{ y: -2 }}
-      className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden cursor-pointer hover:border-slate-700 hover:shadow-xl hover:shadow-black/30 transition-all"
+      className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden hover:border-slate-700 transition-all"
       style={{ borderLeftWidth: 3, borderLeftColor: cfg.accent }}
     >
       <div className="p-4">
         <div className="flex items-start gap-3">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: cfg.iconBg + "22" }}
           >
             <Icon className="w-5 h-5" style={{ color: cfg.accent }} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold text-white text-sm leading-snug truncate">
+              <h3 className="font-semibold text-white text-sm truncate">
                 {incident.title}
               </h3>
               <span
-                className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 flex items-center gap-1 border ${pCfg.ring} ${pCfg.text}`}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 border ${pCfg.ring} ${pCfg.text}`}
               >
                 <span
                   className="w-1.5 h-1.5 rounded-full inline-block"
@@ -145,30 +139,23 @@ function IncidentCard({ incident, index }) {
                 {pCfg.label}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed line-clamp-2">
+            <p className="text-xs text-slate-400 mt-1 line-clamp-2">
               {incident.description}
             </p>
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               {incident.distance != null && (
                 <span className="flex items-center gap-1 text-xs text-slate-500">
-                  <MapPin className="w-3.5 h-3.5" />
+                  <MapPin className="w-3.5 h-3.5" />{" "}
                   {Number(incident.distance).toFixed(1)} km
                 </span>
               )}
               <span className="flex items-center gap-1 text-xs text-slate-500">
-                <Clock className="w-3.5 h-3.5" />
-                {formatTime(incident.createdAt ?? incident.timestamp)}
+                <Clock className="w-3.5 h-3.5" />{" "}
+                {formatTime(incident.createdAt)}
               </span>
-              {incident.reports != null && (
-                <span className="flex items-center gap-1 text-xs text-slate-500">
-                  <Users className="w-3.5 h-3.5" />
-                  {incident.reports}
-                </span>
-              )}
-              {incident.verified && (
+              {incident.isVerified && (
                 <span className="flex items-center gap-1 text-xs font-semibold text-blue-400 ml-auto">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Vérifié
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Vérifié
                 </span>
               )}
             </div>
@@ -182,10 +169,9 @@ function IncidentCard({ incident, index }) {
 export function Nearby() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState("ALL");
-
   const { location } = useGeoLocation();
   const {
-    data: incidents = [],
+    data: response,
     isLoading,
     isError,
     error,
@@ -193,64 +179,47 @@ export function Nearby() {
     isFetching,
   } = useNearbyIncidents(location?.lat, location?.lng);
 
+  const incidents = response?.alerts ?? [];
   const filtered =
     filter === "ALL"
       ? incidents
       : incidents.filter((i) => i.priority === filter);
-  const urgent = incidents.filter(
+  const urgentCount = incidents.filter(
     (i) => i.priority === "CRITICAL" || i.priority === "HIGH",
   ).length;
-  const verified = incidents.filter((i) => i.verified).length;
+  const verifiedCount = incidents.filter((i) => i.isVerified).length;
 
   return (
     <div className="min-h-screen bg-slate-950 pb-32">
-      {/* ── Sticky header — full width bg, constrained inner content ── */}
       <div className="bg-slate-950/80 backdrop-blur border-b border-slate-800 sticky top-0 z-20">
         <div className="max-w-2xl mx-auto px-5 pt-10 pb-4">
           <div className="flex items-center justify-between mb-5">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                  En direct
-                </p>
-              </div>
-              <h1 className="text-2xl font-bold text-white leading-tight">
-                Alertes à proximité
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <motion.button
-                whileTap={{ scale: 0.9 }}
+            <h1 className="text-2xl font-bold text-white">
+              Alertes à proximité
+            </h1>
+            <div className="flex gap-2">
+              <button
                 onClick={() => refetch()}
-                disabled={isFetching}
-                className="w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50"
+                className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center"
               >
                 <RefreshCw
                   className={`w-4 h-4 text-slate-400 ${isFetching ? "animate-spin" : ""}`}
                 />
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.93 }}
+              </button>
+              <button
                 onClick={() => navigate("/")}
-                className="w-10 h-10 bg-red-500 hover:bg-red-400 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/30 transition-colors"
+                className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center"
               >
-                <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </motion.button>
+                <Plus className="w-5 h-5 text-white" />
+              </button>
             </div>
           </div>
-
-          {/* Filter pills */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {filters.map((f) => (
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
-                  filter === f.value
-                    ? "bg-white text-slate-900 border-white"
-                    : "bg-transparent text-slate-500 border-slate-700 hover:border-slate-500 hover:text-slate-300"
-                }`}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold border ${filter === f.value ? "bg-white text-slate-900" : "bg-transparent text-slate-500 border-slate-700"}`}
               >
                 {f.label}
               </button>
@@ -259,96 +228,47 @@ export function Nearby() {
         </div>
       </div>
 
-      {/* ── All body content shares the same centered column ── */}
       <div className="max-w-2xl mx-auto px-5">
-        {/* Stats strip */}
         <div className="flex gap-3 pt-5 pb-1">
           {[
-            {
-              value: isLoading ? "—" : incidents.length,
-              label: "Incidents",
-              color: "text-white",
-            },
-            {
-              value: isLoading ? "—" : urgent,
-              label: "Urgents",
-              color: "text-red-400",
-            },
-            {
-              value: isLoading ? "—" : verified,
-              label: "Vérifiés",
-              color: "text-blue-400",
-            },
-          ].map(({ value, label, color }) => (
+            { v: incidents.length, l: "Incidents", c: "text-white" },
+            { v: urgentCount, l: "Urgents", c: "text-red-400" },
+            { v: verifiedCount, l: "Vérifiés", c: "text-blue-400" },
+          ].map((s) => (
             <div
-              key={label}
+              key={s.l}
               className="flex-1 bg-slate-900 rounded-2xl border border-slate-800 px-4 py-3 text-center"
             >
-              <p className={`text-2xl font-bold ${color}`}>{value}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{label}</p>
+              <p className={`text-2xl font-bold ${s.c}`}>
+                {isLoading ? "—" : s.v}
+              </p>
+              <p className="text-xs text-slate-500">{s.l}</p>
             </div>
           ))}
         </div>
 
-        {/* Content */}
         <div className="pt-4 space-y-3">
           {isError && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center"
-            >
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
               <WifiOff className="w-8 h-8 text-red-400 mx-auto mb-3" />
-              <p className="font-semibold text-red-300 text-sm">
-                Impossible de charger les alertes
+              <p className="text-sm text-red-300">
+                {error?.message || "Erreur de chargement"}
               </p>
-              <p className="text-xs text-red-400/70 mt-1 mb-4">
-                {error?.message}
-              </p>
-              <button
-                onClick={() => refetch()}
-                className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 rounded-xl text-sm font-medium transition-colors"
-              >
-                Réessayer
-              </button>
-            </motion.div>
-          )}
-
-          {isLoading && !isError && (
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <IncidentSkeleton key={i} />
-              ))}
             </div>
           )}
-
-          {!isLoading && !isError && (
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <IncidentSkeleton key={i} />
+            ))
+          ) : (
             <AnimatePresence mode="popLayout">
-              {filtered.length === 0 ? (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="text-center py-20"
-                >
-                  <div className="w-16 h-16 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle2 className="w-8 h-8 text-green-500" />
-                  </div>
-                  <p className="font-semibold text-slate-300">Tout est calme</p>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Aucune alerte active dans ce secteur
-                  </p>
-                </motion.div>
-              ) : (
-                filtered.map((incident, index) => (
-                  <IncidentCard
-                    key={incident.id}
-                    incident={incident}
-                    index={index}
-                  />
-                ))
-              )}
+              {filtered.map((incident, index) => (
+                <IncidentCard
+                  key={incident.id}
+                  incident={incident}
+                  index={index}
+                />
+              ))}
             </AnimatePresence>
           )}
         </div>

@@ -2,18 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { incidentApi } from "../services/incidentService";
 
 export const INCIDENT_KEYS = {
-  nearby: (lat, lng) => ["incidents", "nearby", lat, lng],
+  all: ["incidents"],
+  nearby: () => ["incidents", "nearby"],
   detail: (id) => ["incidents", "detail", id],
 };
 
 // ── Query: fetch nearby incidents ────────────────────────────────────────────
-export function useNearbyIncidents(latitude, longitude) {
+export function useNearbyIncidents() {
   return useQuery({
-    queryKey: INCIDENT_KEYS.nearby(latitude, longitude),
-    queryFn: () => incidentApi.getNearby(latitude, longitude),
-    // Don't fire until we actually have coordinates
-    enabled: !!latitude && !!longitude,
-    staleTime: 1000 * 30, // treat as fresh for 30 seconds
+    queryKey: INCIDENT_KEYS.all,
+    queryFn: () => incidentApi.getNearby(),
+    staleTime: 1000 * 30,
   });
 }
 
@@ -33,11 +32,9 @@ export function useCreateIncident(latitude, longitude) {
   return useMutation({
     mutationFn: incidentApi.create,
     onSuccess: (newIncident) => {
-      // Prepend the new incident into the cache — no refetch needed
-      queryClient.setQueryData(
-        INCIDENT_KEYS.nearby(latitude, longitude),
-        (prev) => (prev ? [newIncident, ...prev] : [newIncident]),
-      );
+      queryClient.invalidateQueries({
+        queryKey: INCIDENT_KEYS.all,
+      });
     },
   });
 }

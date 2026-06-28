@@ -17,12 +17,18 @@ function dataUrlToBlob(dataUrl) {
 }
 
 export const incidentApi = {
+  // Ajoutez les paramètres à la fonction
   getNearby: (latitude, longitude, radius = 10000) => {
     const params = {};
     if (latitude && longitude) {
       Object.assign(params, { latitude, longitude, radius });
     }
-    return api.get("/alerts", { params });
+
+    // Décommentez cette ligne et passez l'objet 'params'
+    // Axios enverra ceci sous forme de query string : ?latitude=X&longitude=Y&radius=Z
+    // return api.get("/alerts", { params });
+
+    return api.get("/alerts");
   },
 
   getById: (id) => api.get(`/alerts/${id}`),
@@ -58,7 +64,7 @@ export const incidentApi = {
     // Pass FormData directly — axios skips Content-Type so the browser
     // sets the multipart boundary correctly, just like the old fetch version
     return api.post("/alerts", formData, {
-      headers: { "Content-Type": undefined },
+      headers: { "Content-Type": "application/json" },
     });
   },
 };
