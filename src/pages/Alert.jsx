@@ -1,35 +1,52 @@
-import { useState, useRef, useEffect } from 'react';
-import { useIncidents } from '../hooks/useIncidents';
-import { useGeoLocation } from '../hooks/useGeoLocation';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Camera, Mic, X, MapPin, Upload, ArrowLeft, Volume2, VolumeX, StopCircle, PlayCircle, Trash2, CheckCircle2 } from 'lucide-react';
+import { useState, useRef, useEffect } from "react";
+import { useIncidents } from "../hooks/useIncidents";
+import { useGeoLocation } from "../hooks/useGeoLocation";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Camera,
+  Mic,
+  X,
+  MapPin,
+  Upload,
+  ArrowLeft,
+  Volume2,
+  VolumeX,
+  StopCircle,
+  PlayCircle,
+  Trash2,
+  CheckCircle2,
+} from "lucide-react";
 
 const severityLevels = [
-  { value: 1, label: 'Faible' },
-  { value: 2, label: 'Moyenne' },
-  { value: 3, label: 'Élevée' },
-  { value: 4, label: 'Critique' }
+  { value: 1, label: "Faible" },
+  { value: 2, label: "Moyenne" },
+  { value: 3, label: "Élevée" },
+  { value: 4, label: "Critique" },
 ];
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08 }
+    transition: { staggerChildren: 0.08 },
   },
-  exit: { opacity: 0, x: -50, transition: { duration: 0.2 } }
+  exit: { opacity: 0, x: -50, transition: { duration: 0.2 } },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 },
+  },
 };
 
 export function Alert() {
   const navigate = useNavigate();
-  const [media, setMedia] = useState('text'); // 'photo', 'voice', 'text'
-  const [text, setText] = useState('');
+  const [media, setMedia] = useState("text"); // 'photo', 'voice', 'text'
+  const [text, setText] = useState("");
   const [severity, setSeverity] = useState(2);
   const [volume, setVolume] = useState(50);
   const [submitting, setSubmitting] = useState(false);
@@ -57,8 +74,8 @@ export function Alert() {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false
+        video: { facingMode: "environment" },
+        audio: false,
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -66,15 +83,15 @@ export function Alert() {
       }
       setCameraActive(true);
     } catch (err) {
-      console.error('Error accessing camera:', err);
-      alert('Impossible d\'accéder à la caméra');
+      console.error("Error accessing camera:", err);
+      alert("Impossible d'accéder à la caméra");
     }
   };
 
   // Stop camera
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     setCameraActive(false);
@@ -83,19 +100,19 @@ export function Alert() {
   // Capture photo
   const capturePhoto = () => {
     if (videoRef.current) {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       ctx.drawImage(videoRef.current, 0, 0);
-      const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-      setPhotos(prev => [...prev, photoDataUrl]);
+      const photoDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      setPhotos((prev) => [...prev, photoDataUrl]);
     }
   };
 
   // Remove photo
   const removePhoto = (index) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Start voice recording
@@ -110,7 +127,9 @@ export function Alert() {
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
         setRecordedAudio(audioBlob);
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
@@ -120,11 +139,11 @@ export function Alert() {
       setIsRecording(true);
       setRecordingTime(0);
       recordingTimerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
     } catch (err) {
-      console.error('Error accessing microphone:', err);
-      alert('Impossible d\'accéder au microphone');
+      console.error("Error accessing microphone:", err);
+      alert("Impossible d'accéder au microphone");
     }
   };
 
@@ -132,7 +151,9 @@ export function Alert() {
   const stopVoiceRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) => track.stop());
       setIsRecording(false);
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
@@ -151,7 +172,7 @@ export function Alert() {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   // Cleanup on unmount
@@ -169,47 +190,44 @@ export function Alert() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (media === 'text' && !text.trim()) return;
-    if (media === 'voice' && !recordedAudio) return;
+    if (media === "text" && !text.trim()) return;
+    if (media === "voice" && !recordedAudio) return;
 
     setSubmitting(true);
     try {
-      // Clean payload for alert creation
       const payload = {
-        mediaType: media, // 'photo', 'voice', 'text'
-        title: media === 'text' 
-          ? text.substring(0, 50) + (text.length > 50 ? '...' : '') 
-          : `${media.charAt(0).toUpperCase() + media.slice(1)} Alert`,
-        description: text || '',
-        severity: severity, // 1: Faible, 2: Moyenne, 3: Élevée, 4: Critique
+        type: "OTHER", // replace with value from your DB's AlertType table
+        title:
+          media === "text"
+            ? text.substring(0, 50) + (text.length > 50 ? "..." : "")
+            : `${media.charAt(0).toUpperCase() + media.slice(1)} Alert`,
+        description: text || `${media} alert submitted`,
+        severity,
         location: {
-          lat: location?.lat || 48.8566,
-          lng: location?.lng || 2.3522,
-          city: location?.city || '',
-          region: location?.region || '',
-          country: location?.country || ''
+          lat: location?.lat ?? 48.8566,
+          lng: location?.lng ?? 2.3522,
+          city: location?.city ?? "",
+          region: location?.region ?? "",
+          country: location?.country ?? "",
         },
-        media: {
-          photos: photos || [], // Array of Data URLs
-          audio: recordedAudio ? await blobToBase64(recordedAudio) : null // Base64 string
-        },
-        timestamp: new Date().toISOString()
+        photos: media === "photo" ? photos : [], // DataURL strings
+        // audio not sent — backend doesn't support it yet
+        isAnonymous: false,
       };
 
       await createIncident(payload);
       setSuccess(true);
-      
-      // Reset form
-      setText('');
+
+      setText("");
       setPhotos([]);
       deleteAudio();
       stopCamera();
-      setMedia('text');
+      setMedia("text");
       setSeverity(2);
-      
+
       setTimeout(() => setSuccess(false), 4000);
     } catch (err) {
-      console.error('Failed to create incident:', err);
+      console.error("Failed to create incident:", err);
     } finally {
       setSubmitting(false);
     }
@@ -245,7 +263,9 @@ export function Alert() {
             </div>
             <div>
               <h3 className="font-bold text-gray-900">Alerte envoyée!</h3>
-              <p className="text-sm text-gray-500">Les autorités ont été prévenues</p>
+              <p className="text-sm text-gray-500">
+                Les autorités ont été prévenues
+              </p>
             </div>
           </div>
         </motion.div>
@@ -256,7 +276,7 @@ export function Alert() {
           <button
             onClick={() => {
               stopCamera();
-              navigate('/nearby');
+              navigate("/nearby");
             }}
             className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm"
           >
@@ -271,10 +291,7 @@ export function Alert() {
           >
             Signaler un incident
           </motion.h1>
-          <motion.p
-            variants={itemVariants}
-            className="text-gray-600"
-          >
+          <motion.p variants={itemVariants} className="text-gray-600">
             Aidez votre communauté en signalant rapidement ce qui se passe
           </motion.p>
         </div>
@@ -288,36 +305,22 @@ export function Alert() {
               whileTap={{ scale: 0.95 }}
               type="button"
               onClick={() => {
-                setMedia('photo');
+                setMedia("photo");
                 if (!cameraActive) startCamera();
               }}
               className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all ${
-                media === 'photo'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                media === "photo"
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
               }`}
             >
-              <Camera className={`w-8 h-8 ${media === 'photo' ? 'text-blue-600' : 'text-gray-600'}`} />
-              <span className={`text-sm font-semibold ${media === 'photo' ? 'text-blue-700' : 'text-gray-700'}`}>Photo</span>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => {
-                setMedia('voice');
-                stopCamera();
-              }}
-              className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all ${
-                media === 'voice' || isRecording
-                  ? 'border-red-500 bg-red-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
-              }`}
-            >
-              <Mic className={`w-8 h-8 ${media === 'voice' || isRecording ? 'text-red-600' : 'text-gray-600'}`} />
-              <span className={`text-sm font-semibold ${media === 'voice' || isRecording ? 'text-red-700' : 'text-gray-700'}`}>
-                {isRecording ? formatTime(recordingTime) : 'Voix'}
+              <Camera
+                className={`w-8 h-8 ${media === "photo" ? "text-blue-600" : "text-gray-600"}`}
+              />
+              <span
+                className={`text-sm font-semibold ${media === "photo" ? "text-blue-700" : "text-gray-700"}`}
+              >
+                Photo
               </span>
             </motion.button>
 
@@ -326,24 +329,52 @@ export function Alert() {
               whileTap={{ scale: 0.95 }}
               type="button"
               onClick={() => {
-                setMedia('text');
+                setMedia("voice");
                 stopCamera();
               }}
               className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all ${
-                media === 'text'
-                  ? 'border-purple-500 bg-purple-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                media === "voice" || isRecording
+                  ? "border-red-500 bg-red-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+              }`}
+            >
+              <Mic
+                className={`w-8 h-8 ${media === "voice" || isRecording ? "text-red-600" : "text-gray-600"}`}
+              />
+              <span
+                className={`text-sm font-semibold ${media === "voice" || isRecording ? "text-red-700" : "text-gray-700"}`}
+              >
+                {isRecording ? formatTime(recordingTime) : "Voix"}
+              </span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={() => {
+                setMedia("text");
+                stopCamera();
+              }}
+              className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all ${
+                media === "text"
+                  ? "border-purple-500 bg-purple-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
               }`}
             >
               <div className="w-8 h-8 flex items-center justify-center font-bold text-xl">
                 Aa
               </div>
-              <span className={`text-sm font-semibold ${media === 'text' ? 'text-purple-700' : 'text-gray-700'}`}>Texte</span>
+              <span
+                className={`text-sm font-semibold ${media === "text" ? "text-purple-700" : "text-gray-700"}`}
+              >
+                Texte
+              </span>
             </motion.button>
           </div>
         </motion.div>
 
-        {media === 'photo' && (
+        {media === "photo" && (
           <motion.div variants={itemVariants} className="mb-6">
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               {cameraActive ? (
@@ -387,11 +418,20 @@ export function Alert() {
 
               {photos.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Photos capturées</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                    Photos capturées
+                  </h4>
                   <div className="flex flex-wrap gap-3">
                     {photos.map((photo, index) => (
-                      <div key={index} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200">
-                        <img src={photo} alt={`Capture ${index + 1}`} className="w-full h-full object-cover" />
+                      <div
+                        key={index}
+                        className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200"
+                      >
+                        <img
+                          src={photo}
+                          alt={`Capture ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
                         <button
                           type="button"
                           onClick={() => removePhoto(index)}
@@ -408,7 +448,7 @@ export function Alert() {
           </motion.div>
         )}
 
-        {media === 'voice' && (
+        {media === "voice" && (
           <motion.div variants={itemVariants} className="mb-6">
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               {!recordedAudio ? (
@@ -438,7 +478,9 @@ export function Alert() {
                     </div>
                   )}
                   <p className="text-gray-500 text-sm">
-                    {isRecording ? 'Appuyez pour arrêter' : 'Appuyez pour commencer l\'enregistrement'}
+                    {isRecording
+                      ? "Appuyez pour arrêter"
+                      : "Appuyez pour commencer l'enregistrement"}
                   </p>
                 </div>
               ) : (
@@ -448,8 +490,12 @@ export function Alert() {
                       <div className="flex items-center gap-3">
                         <PlayCircle className="w-8 h-8 text-green-600" />
                         <div>
-                          <p className="font-medium text-gray-900">Enregistrement</p>
-                          <p className="text-xs text-gray-500">{formatTime(recordingTime)}</p>
+                          <p className="font-medium text-gray-900">
+                            Enregistrement
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatTime(recordingTime)}
+                          </p>
                         </div>
                       </div>
                       <button
@@ -461,11 +507,7 @@ export function Alert() {
                       </button>
                     </div>
                     {audioUrl && (
-                      <audio
-                        src={audioUrl}
-                        controls
-                        className="w-full"
-                      />
+                      <audio src={audioUrl} controls className="w-full" />
                     )}
                   </div>
                   <button
@@ -497,14 +539,16 @@ export function Alert() {
                   <VolumeX className="w-6 h-6 text-gray-600" />
                 </div>
                 <div className="text-center">
-                  <span className="text-sm text-gray-600">Volume: {volume}%</span>
+                  <span className="text-sm text-gray-600">
+                    Volume: {volume}%
+                  </span>
                 </div>
               </div>
             </div>
           </motion.div>
         )}
 
-        {media === 'text' && (
+        {media === "text" && (
           <motion.div variants={itemVariants} className="mb-6">
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <textarea
@@ -534,17 +578,35 @@ export function Alert() {
                   onChange={(e) => setSeverity(Number(e.target.value))}
                   className="w-full h-3 bg-gradient-to-r from-green-200 via-yellow-200 via-orange-200 to-red-200 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    accentColor: severity === 1 ? '#22c55e' : severity === 2 ? '#eab308' : severity === 3 ? '#f97316' : '#ef4444'
+                    accentColor:
+                      severity === 1
+                        ? "#22c55e"
+                        : severity === 2
+                          ? "#eab308"
+                          : severity === 3
+                            ? "#f97316"
+                            : "#ef4444",
                   }}
                 />
               </div>
               <span className="text-sm font-medium text-red-600">Critique</span>
             </div>
             <div className="text-center">
-              <span className={`text-lg font-bold ${
-                severity === 1 ? 'text-green-600' : severity === 2 ? 'text-yellow-600' : severity === 3 ? 'text-orange-600' : 'text-red-600'
-              }`}>
-                {severityLevels.find(level => level.value === severity)?.label}
+              <span
+                className={`text-lg font-bold ${
+                  severity === 1
+                    ? "text-green-600"
+                    : severity === 2
+                      ? "text-yellow-600"
+                      : severity === 3
+                        ? "text-orange-600"
+                        : "text-red-600"
+                }`}
+              >
+                {
+                  severityLevels.find((level) => level.value === severity)
+                    ?.label
+                }
               </span>
             </div>
           </div>
@@ -555,7 +617,9 @@ export function Alert() {
             <div className="bg-green-50 rounded-2xl border border-green-200 p-5 flex items-center gap-3">
               <MapPin className="w-6 h-6 text-green-600" />
               <div>
-                <p className="text-green-700 text-sm font-semibold">Position active</p>
+                <p className="text-green-700 text-sm font-semibold">
+                  Position active
+                </p>
                 <p className="text-green-600 text-xs">
                   {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
@@ -570,7 +634,11 @@ export function Alert() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
-            disabled={submitting || (media === 'text' && !text.trim()) || (media === 'voice' && !recordedAudio)}
+            disabled={
+              submitting ||
+              (media === "text" && !text.trim()) ||
+              (media === "voice" && !recordedAudio)
+            }
             className="w-full bg-red-600 text-white py-5 rounded-2xl font-bold text-xl shadow-xl shadow-red-600/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all"
           >
             {submitting ? (
@@ -579,7 +647,7 @@ export function Alert() {
                 <span>Envoi en cours...</span>
               </div>
             ) : (
-              'ENVOYER L\'ALERTE'
+              "ENVOYER L'ALERTE"
             )}
           </motion.button>
         </div>

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { incidentService } from '../services/incidentService';
+import { useState, useEffect } from "react";
+import { incidentService } from "../services/incidentService";
 
 export function useIncidents() {
   const [incidents, setIncidents] = useState([]);
@@ -15,6 +15,8 @@ export function useIncidents() {
       setLoading(true);
       const data = await incidentService.getNearbyIncidents();
       setIncidents(data);
+
+      console.log(JSON.stringify(data, null, 2));
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -26,8 +28,8 @@ export function useIncidents() {
   const createIncident = async (incidentData) => {
     try {
       const newIncident = await incidentService.createIncident(incidentData);
-      setIncidents(prev => [newIncident, ...prev]);
-      return newIncident;
+      setIncidents((prev) => [newIncident, ...prev]);
+      return incidents;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -39,6 +41,6 @@ export function useIncidents() {
     loading,
     error,
     loadIncidents,
-    createIncident
+    createIncident,
   };
 }

@@ -33,8 +33,12 @@ export function Login() {
     e.preventDefault();
     clearError();
 
-    if (!formData.email || !formData.password)
+    setLocalError("");
+
+    if (!formData.email || !formData.password) {
       setLocalError("Entre tout les donnees.");
+      return;
+    }
 
     try {
       await login(formData);
@@ -60,17 +64,16 @@ export function Login() {
           <p className="text-gray-500">Accédez à votre compte</p>
         </motion.div>
 
-        {error ||
-          (localError && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3"
-            >
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              <p className="text-red-700 text-sm">{error || localError}</p>
-            </motion.div>
-          ))}
+        {(error || localError) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3"
+          >
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            <p className="text-red-700 text-sm">{error || localError}</p>
+          </motion.div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <motion.div variants={itemVariants}>

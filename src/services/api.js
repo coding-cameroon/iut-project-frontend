@@ -1,6 +1,4 @@
-const API_BASE_URL =
-  // import.meta.env.VITE_API_BASE_URL ||
-  "https://iut-project-backend.onrender.com/api";
+export const API_BASE_URL = "https://iut-project-backend.onrender.com/api";
 
 class ApiService {
   constructor() {
@@ -41,7 +39,8 @@ class ApiService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const error = new Error(
-          errorData.message || `HTTP error! status: ${response.status}`,
+          errorData.message ||
+            `HTTP error! status: ${JSON.stringify(response, null, 2)}`,
         );
         error.status = response.status;
         error.data = errorData;
@@ -64,7 +63,7 @@ class ApiService {
         endpoint: endpoint,
         stack: error.stack,
       };
-      console.error("API request failed:", errorInfo);
+      console.error("API request failed: ", JSON.stringify(error, null, 2));
 
       if (error.status === 401) {
         localStorage.removeItem("token");
