@@ -1,116 +1,57 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import apiService from '../services/api'
+import { createContext, useContext } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { authApi } from "../services/api";
+import {
+  AUTH_KEYS,
+  useLoginMutation,
+  useLogoutMutation,
+  useRegisterMutation,
+} from "../hooks/useAuthMutations";
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  // This query runs once on mount and whenever the token exists
+  const {
+    data: user,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: AUTH_KEYS.currentUser,
+    queryFn: authApi.getCurrentUser,
+    // Don't run the query if there's no token — avoids a pointless 401
+    enabled: !!localStorage.getItem("token"),
+    retry: false,
+  });
 
-  const login = useCallback(async (credentials) => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await apiService.login(credentials)
-      const { user: userData, token } = response
-      
-      localStorage.setItem('token', token)
-      setUser(userData)
-      
-      return userData
-    } catch (err) {
-      setError(err.message || 'Login failed')
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const logout = useCallback(async () => {
-    try {
-      await apiService.logout()
-    } catch (err) {
-      console.error('Logout error:', err)
-    } finally {
-      localStorage.removeItem('token')
-      setUser(null)
-    }
-  }, [])
-
-  const register = useCallback(async (userData) => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await apiService.register(userData)
-      const { user: userResult, token } = response
-      
-      localStorage.setItem('token', token)
-      setUser(userResult)
-      
-      return userResult
-    } catch (err) {
-      setError(err.message || 'Registration failed')
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const checkAuth = useCallback(async () => {
-    const token = localStorage.getItem('token')
-    
-    if (!token) {
-      setUser(null)
-      setLoading(false)
-      return
-    }
-
-    try {
-      const userData = await apiService.getCurrentUser()
-      setUser(userData)
-    } catch (err) {
-      console.error('Auth check failed:', err)
-      localStorage.removeItem('token')
-      setUser(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const clearError = useCallback(() => {
-    setError(null)
-  }, [])
-
-  useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+  const loginMutation = useLoginMutation();
+  const registerMutation = useRegisterMutation();
+  const logoutMutation = useLogoutMutation();
 
   const value = {
-    user,
-    loading,
-    error,
-    login,
-    logout,
-    register,
-    checkAuth,
-    clearError,
-    isAuthenticated: !!user
-  }
+    user: user ?? null,
+    isAuthenticated: !!user,
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
+    // Loading — true during initial auth check OR during a mutation
+    loading: isLoading || loginMutation.isPending || registerMutation.isPending,
+
+    // Expose the mutation objects directly so components can read isPending, error, etc.
+    login: loginMutation.mutateAsync,
+    loginError: loginMutation.error?.message ?? null,
+    loginReset: loginMutation.reset,
+
+    register: registerMutation.mutateAsync,
+    registerError: registerMutation.error?.message ?? null,
+    registerReset: registerMutation.reset,
+
+    logout: logoutMutation.mutateAsync,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

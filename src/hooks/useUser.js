@@ -1,44 +1,38 @@
-import { useState, useEffect } from 'react';
-import { userService } from '../services/userService';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { userApi } from "../services/api";
+
+export const USER_KEYS = {
+  profile: ["user", "profile"],
+};
 
 export function useUser() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadUser();
-  }, []);
+  const {
+    data: user,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: USER_KEYS.profile,
+    queryFn: userApi.getProfile,
+  });
 
-  const loadUser = async () => {
-    try {
-      setLoading(true);
-      const data = await userService.getProfile();
-      setUser(data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateUser = async (data) => {
-    try {
-      const updated = await userService.updateProfile(data);
-      setUser(updated);
-      return updated;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: userApi.updateProfile,
+    onSuccess: (updated) => {
+      // Update the cache directly — no need to refetch
+      queryClient.setQueryData(USER_KEYS.profile, updated);
+    },
+  });
 
   return {
-    user,
-    loading,
-    error,
-    loadUser,
-    updateUser
+    user: user ?? null,
+    loading: isLoading,
+    error: error?.message ?? null,
+    refetch,
+    updateUser: updateMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
+    updateError: updateMutation.error?.message ?? null,
   };
 }

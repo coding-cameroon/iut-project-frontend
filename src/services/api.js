@@ -1,128 +1,60 @@
+import axios from "axios";
+
 export const API_BASE_URL = "https://iut-project-backend.onrender.com/api";
 
-class ApiService {
-  constructor() {
-    this.baseURL = API_BASE_URL;
-    this.interceptors = {
-      request: [],
-      response: [],
-    };
-  }
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-  addRequestInterceptor(interceptor) {
-    this.interceptors.request.push(interceptor);
-  }
-
-  addResponseInterceptor(interceptor) {
-    this.interceptors.response.push(interceptor);
-  }
-
-  async request(endpoint, options = {}) {
+// Request interceptor — attach token automatically
+api.interceptors.request.use(
+  (config) => {
     const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
-    let config = {
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    };
+// Response interceptor — normalize errors + handle 401
+api.interceptors.response.use(
+  (response) => response.data, // unwrap .data automatically
+  (error) => {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Une erreur est survenue";
 
-    for (const interceptor of this.interceptors.request) {
-      config = await interceptor(config);
+    const status = error.response?.status;
+
+    if (status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     }
 
-    try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, config);
+    // Attach a clean message to the error before re-throwing
+    error.message = message;
+    return Promise.reject(error);
+  },
+);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const error = new Error(
-          errorData.message ||
-            `HTTP error! status: ${JSON.stringify(response, null, 2)}`,
-        );
-        error.status = response.status;
-        error.data = errorData;
-        throw error;
-      }
+// Named API calls — auth
+export const authApi = {
+  login: (credentials) => api.post("/auth/login", credentials),
+  register: (userData) => api.post("/auth/register", userData),
+  logout: () => api.post("/auth/logout"),
+  getCurrentUser: () => api.get("/auth/me"),
+};
 
-      const data = await response.json();
+// Named API calls — user
+export const userApi = {
+  getProfile: () => api.get("/users/profile"),
+  updateProfile: (data) => api.patch("/users/profile", data),
+};
 
-      let processedData = data;
-      for (const interceptor of this.interceptors.response) {
-        processedData = await interceptor(processedData);
-      }
-
-      return processedData;
-    } catch (error) {
-      const errorInfo = {
-        message: error.message,
-        status: error.status,
-        data: error.data,
-        endpoint: endpoint,
-        stack: error.stack,
-      };
-      console.error("API request failed: ", JSON.stringify(error, null, 2));
-
-      if (error.status === 401) {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-      }
-
-      throw error;
-    }
-  }
-
-  async get(endpoint, params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${endpoint}?${queryString}` : endpoint;
-    return this.request(url);
-  }
-
-  async post(endpoint, data = {}) {
-    return this.request(endpoint, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async put(endpoint, data = {}) {
-    return this.request(endpoint, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async patch(endpoint, data = {}) {
-    return this.request(endpoint, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async delete(endpoint) {
-    return this.request(endpoint, {
-      method: "DELETE",
-    });
-  }
-
-  // Auth endpoints
-  async login(credentials) {
-    return this.post("/auth/login", credentials);
-  }
-
-  async logout() {
-    return this.post("/auth/logout");
-  }
-
-  async register(userData) {
-    return this.post("/auth/register", userData);
-  }
-
-  async getCurrentUser() {
-    return this.get("/auth/me");
-  }
-}
-
-export default new ApiService();
+export default api;
