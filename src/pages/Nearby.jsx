@@ -113,6 +113,7 @@ function IncidentCard({ incident, index }) {
         stiffness: 300,
         damping: 28,
       }}
+      onClick={() => navigate(`/${incident.id}`)}
       className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden hover:border-slate-700 transition-all"
       style={{ borderLeftWidth: 3, borderLeftColor: cfg.accent }}
     >

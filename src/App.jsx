@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { Alert } from "./pages/Alert";
 import { Nearby } from "./pages/Nearby";
+import { IncidentDetail } from "./pages/IncidentDetail";
 import { Profile } from "./pages/Profile";
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
@@ -62,6 +63,7 @@ export function App() {
           >
             <Route index element={<Alert />} />
             <Route path="nearby" element={<Nearby />} />
+            <Route path=":id" element={<IncidentDetail />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
