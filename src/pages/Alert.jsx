@@ -194,7 +194,7 @@ export function Alert() {
   const currentSeverity = severityLevels.find((l) => l.value === severity);
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-40">
+    <div className="min-h-screen bg-slate-950 pb-32">
       {/* ── Toasts — constrained to match content width ── */}
       <AnimatePresence>
         {success && (
@@ -564,17 +564,12 @@ export function Alert() {
               </div>
             </div>
           )}
-        </form>
-      </div>
-
-      {/* ── Sticky submit — full-width bar, button constrained inside ── */}
-      <div className="fixed bottom-20 inset-x-0 z-40 bg-slate-950/80 backdrop-blur border-t border-slate-800/50">
-        <div className="max-w-2xl mx-auto px-5 pt-3 pb-3">
+          {/* Submit — in-flow, sits naturally above the tab bar */}
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={handleSubmit}
+            type="submit"
             disabled={!canSubmit}
-            className="w-full bg-red-500 hover:bg-red-400 disabled:bg-slate-800 disabled:text-slate-600 text-white py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2.5 shadow-xl shadow-red-500/20 disabled:shadow-none transition-all"
+            className="w-full bg-red-500 hover:bg-red-400 disabled:bg-slate-800 disabled:text-slate-600 text-white py-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-red-500/20 disabled:shadow-none transition-all mt-2"
           >
             {createMutation.isPending ? (
               <>
@@ -588,7 +583,7 @@ export function Alert() {
               </>
             )}
           </motion.button>
-        </div>
+        </form>
       </div>
     </div>
   );
