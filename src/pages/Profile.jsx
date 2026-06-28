@@ -195,7 +195,7 @@ export function Profile() {
         >
           {[
             {
-              value: normalizedIncidents.alert.length || 0,
+              value: normalizedIncidents?.alert?.length || 0,
               label: "Rapports",
               color: "text-blue-400",
             },
