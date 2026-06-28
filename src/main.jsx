@@ -19,12 +19,12 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <QueryClient client={queryClient}>
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </QueryClient>
-    <ReactQueryDevtools initialIsOpen={false} />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   </StrictMode>,
 );
 

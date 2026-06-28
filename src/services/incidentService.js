@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./api";
+import api from "./api";
 
 const severityToPriority = {
   1: "LOW",
@@ -16,47 +16,23 @@ function dataUrlToBlob(dataUrl) {
   return new Blob([arr], { type: mime });
 }
 
-async function authedFetch(endpoint, options = {}) {
-  const token = localStorage.getItem("token");
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const error = new Error(
-      errorData.error || `HTTP error! status: ${response.status}`,
-    );
-    error.status = response.status;
-    error.data = errorData;
-    throw error;
-  }
-
-  return response.json();
-}
-
-export const incidentService = {
-  async getNearbyIncidents(latitude, longitude, radius = 10000) {
-    const params = new URLSearchParams();
+export const incidentApi = {
+  getNearby: (latitude, longitude, radius = 10000) => {
+    const params = {};
     if (latitude && longitude) {
-      params.set("latitude", latitude);
-      params.set("longitude", longitude);
-      params.set("radius", radius);
+      Object.assign(params, { latitude, longitude, radius });
     }
-    const query = params.toString() ? `?${params.toString()}` : "";
-    return authedFetch(`/alerts${query}`);
+    return api.get("/alerts", { params });
   },
 
-  async createIncident(payload) {
+  getById: (id) => api.get(`/alerts/${id}`),
+
+  create: (payload) => {
     const formData = new FormData();
 
     formData.append("title", payload.title);
     formData.append("description", payload.description || payload.title);
-    formData.append("type", payload.type ?? "OTHER"); // must match AlertType.name in DB
+    formData.append("type", payload.type ?? "OTHER");
     formData.append(
       "priority",
       severityToPriority[payload.severity] ?? "MEDIUM",
@@ -72,7 +48,6 @@ export const incidentService = {
     if (payload.isAnonymous !== undefined)
       formData.append("isAnonymous", String(payload.isAnonymous));
 
-    // Convert DataURL photos to Blobs for multer
     if (payload.photos?.length > 0) {
       payload.photos.forEach((dataUrl, i) => {
         const blob = dataUrlToBlob(dataUrl);
@@ -80,19 +55,10 @@ export const incidentService = {
       });
     }
 
-    // Note: audio is not handled by the backend yet — skipping it
-
-    const data = await authedFetch("/alerts", {
-      method: "POST",
-      // No Content-Type header — browser sets multipart/form-data boundary automatically
-      body: formData,
+    // Pass FormData directly — axios skips Content-Type so the browser
+    // sets the multipart boundary correctly, just like the old fetch version
+    return api.post("/alerts", formData, {
+      headers: { "Content-Type": undefined },
     });
-
-    console.log("✅ Alert created:", data.alert);
-    return data.alert;
-  },
-
-  async getIncidentById(id) {
-    return authedFetch(`/alerts/${id}`);
   },
 };
