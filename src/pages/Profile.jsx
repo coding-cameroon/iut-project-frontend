@@ -195,16 +195,20 @@ export function Profile() {
         >
           {[
             {
-              value: mockStats.totalIncidents,
+              value: normalizedIncidents.alert.length || 0,
               label: "Rapports",
               color: "text-blue-400",
             },
             {
-              value: `${mockStats.responseRate}%`,
+              value: `0%`,
               label: "Réponse",
               color: "text-green-400",
             },
-            { value: yearsActive, label: "Années", color: "text-purple-400" },
+            {
+              value: user?.createdAt || 1,
+              label: "Année(s)",
+              color: "text-purple-400",
+            },
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -229,18 +233,45 @@ export function Profile() {
           <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
             Activité récente
           </h3>
-          <div className="space-y-2">
-            {/*  */}
-            {userIncidentLoading && <p>LOADING....</p>}
 
-            {!userIncidentLoading &&
-              normalizedIncidents.map((item, i) => {
-                const incidentStatus =
-                  item.status === "RESOLVED" || item.status === "resolved"
-                    ? "resolved"
-                    : "pending";
-                const incidentDate =
-                  item.createdAt || item.updatedAt || item.timestamp;
+          {/* Loading */}
+          {userIncidentLoading && (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-4 bg-slate-900 rounded-2xl border border-slate-800 animate-pulse"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-slate-800 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 bg-slate-800 rounded w-2/5" />
+                    <div className="h-2.5 bg-slate-800 rounded w-1/4" />
+                  </div>
+                  <div className="h-5 bg-slate-800 rounded-full w-16" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!userIncidentLoading && normalizedIncidents.length === 0 && (
+            <div className="text-center py-10 bg-slate-900 rounded-2xl border border-slate-800">
+              <AlertCircle className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-400 text-sm font-medium">
+                Aucun incident signalé
+              </p>
+              <p className="text-slate-600 text-xs mt-1">
+                Vos signalements apparaîtront ici
+              </p>
+            </div>
+          )}
+
+          {/* Data */}
+          {!userIncidentLoading && normalizedIncidents.alert.length > 0 && (
+            <div className="space-y-2">
+              {normalizedIncidents.alert.map((item, i) => {
+                const resolved = item.status?.toUpperCase() === "RESOLVED";
+                const date = item.createdAt ?? item.updatedAt ?? item.timestamp;
 
                 return (
                   <motion.div
@@ -249,7 +280,8 @@ export function Profile() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.12 + i * 0.05 }}
                     whileHover={{ x: 2 }}
-                    className="flex items-center justify-between p-4 bg-slate-900 rounded-2xl border border-slate-800"
+                    onClick={() => navigate(`/nearby/${item.id}`)}
+                    className="flex items-center justify-between p-4 bg-slate-900 rounded-2xl border border-slate-800 cursor-pointer hover:pointer hover:border-slate-700 transition-all"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -259,28 +291,33 @@ export function Profile() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-white text-sm truncate">
-                          {item.title || "Incident"}
+                          {item.title ?? "Incident"}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {incidentDate
-                            ? new Date(incidentDate).toLocaleDateString("fr-FR")
+                          {date
+                            ? new Date(date).toLocaleDateString("fr-FR", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
                             : "Date indisponible"}
                         </p>
                       </div>
                     </div>
                     <span
                       className={`px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ml-3 ${
-                        incidentStatus === "resolved"
+                        resolved
                           ? "bg-green-500/15 text-green-400 border border-green-500/20"
                           : "bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
                       }`}
                     >
-                      {incidentStatus === "resolved" ? "Résolu" : "En cours"}
+                      {resolved ? "Résolu" : "En cours"}
                     </span>
                   </motion.div>
                 );
               })}
-          </div>
+            </div>
+          )}
         </motion.div>
 
         {/* ── Permissions ── */}
